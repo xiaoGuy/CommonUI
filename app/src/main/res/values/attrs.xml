@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VerifyCodeEditText">
+
+        <attr name="cursorDrawable" format="reference"/>
+        <attr name="hint" format="string"/>
+        <attr name="hintColor" format="color"/>
+        <attr name="textSize" format="dimension"/>
+        <attr name="textColor" format="color"/>
+        <!-- 验证码的长度 -->
+        <attr name="verifyCodeLength" format="integer"/>
+        <!-- 输入框距离底部的间距 -->
+        <attr name="editMarginBottom" format="dimension"/>
+
+        <!-- 获取验证码按钮的字体大小 -->
+        <attr name="buttonTextSize" format="dimension"/>
+        <attr name="buttonTextColor" format="reference"/>
+        <attr name="buttonBackground" format="reference"/>
+        <attr name="buttonMarginBottom" format="dimension"/>
+        <!-- 重新获取验证码所需等待的时间 -->
+        <attr name="resendTime" format="integer"/>
+        <!-- 获取验证码按钮可点击时的文字内容 -->
+        <attr name="buttonText" format="string"/>
+
+        <attr name="underlineColor" format="color"/>
+        <attr name="underlineHeight" format="dimension"/>
+
+        <!--  -->
+        <attr name="gravityCenterVertical" format="boolean"/>
+
+    </declare-styleable>
+</resources>
