@@ -6,17 +6,20 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!--<com.example.administrator.myapplication.VerifyCodeEditText
+    <!--<com.example.administrator.myapplication.view.VerifyCodeEditText
         android:layout_width="match_parent"
         android:layout_height="55dp"
         app:gravityCenterVertical="false"/>-->
-    <TextView
+    <EditText
         android:id="@+id/text"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
         android:text="TextView"
+        android:textColor="#ff0000"
         android:textSize="30sp"
+        android:textCursorDrawable="@drawable/shape"
         />
+
 
 </LinearLayout>
