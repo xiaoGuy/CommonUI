@@ -6,20 +6,22 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!--<com.example.administrator.myapplication.view.VerifyCodeEditText
+    <com.example.administrator.myapplication.view.VerifyCodeEditText
+        android:id="@+id/verifyEdit"
         android:layout_width="match_parent"
         android:layout_height="55dp"
-        app:gravityCenterVertical="false"/>-->
-    <EditText
-        android:id="@+id/text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:text="TextView"
-        android:textColor="#ff0000"
-        android:textSize="30sp"
-        android:textCursorDrawable="@drawable/shape"
+        app:verifyCodeLength="4"
+        app:resendTime="5"
+        app:buttonText="获取验证码"
+        app:cursorColor="@color/colorPrimary"
+        app:hintColor="@color/colorPrimary"
+        app:hint="hehe"
+        app:textColor="@color/colorAccent"
+        app:underlineColor="@color/colorPrimary"
         />
 
-
+    <Button
+        android:id="@+id/btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </LinearLayout>

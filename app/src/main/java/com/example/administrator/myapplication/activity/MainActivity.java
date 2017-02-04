@@ -1,23 +1,23 @@
 package com.example.administrator.myapplication.activity;
 
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.widget.TextView;
+import android.widget.Button;
 
 import com.example.administrator.myapplication.R;
-
-import java.lang.reflect.Field;
+import com.example.administrator.myapplication.view.VerifyCodeEditText;
+import com.example.administrator.myapplication.view.VerifyCodeEditText.OnVerifyButtonClickListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnVerifyButtonClickListener {
 
-    @BindView(R.id.text)
-    TextView mText;
+    @BindView(R.id.verifyEdit)
+    VerifyCodeEditText mVerifyEdit;
+    @BindView(R.id.btn)
+    Button mBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,28 +25,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        try {
-//            Field f = GradientDrawable.class.getDeclaredField("mGradientState");
-//            f.setAccessible(true);
+        mVerifyEdit.setOnVerifyButtonClickListener(this);
+    }
 
-//            Object obj = f.get(g);
-//            f = obj.getClass().getDeclaredField("mPadding");
-//            f.setAccessible(true);
-//            Rect rect = new Rect(100, 200, 100, 200);
-//            f.set(obj, rect);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    @Override
+    public void onVerifyButtonClick() {
+        mVerifyEdit.startCountdown();
+    }
 
-        try {
-            Field fCursorDrawableRes = TextView.class.getDeclaredField("mCursorDrawableRes");
-            fCursorDrawableRes.setAccessible(true);
-            int mCursorDrawableRes = fCursorDrawableRes.getInt(mText);
-            Drawable drawable = ContextCompat.getDrawable(this, mCursorDrawableRes);
-            Log.d("size", drawable.getClass().getCanonicalName());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    @OnClick(R.id.btn)
+    public void onClick() {
+        mVerifyEdit.cancelCountdown();
     }
 
     private void f() {

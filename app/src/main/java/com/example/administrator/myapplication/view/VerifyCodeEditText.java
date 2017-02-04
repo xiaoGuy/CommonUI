@@ -1,15 +1,17 @@
 package com.example.administrator.myapplication.view;
 
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
@@ -19,7 +21,6 @@ import android.text.InputFilter;
 import android.text.InputFilter.LengthFilter;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -34,7 +35,7 @@ import java.lang.reflect.Field;
 
 /**
  * Created by hua on 2017/1/11.
- *
+ * <p>
  * 1. 改成用代码生成 Shape
  * 2. 改成用代码生成 ColorStateList
  */
@@ -45,22 +46,22 @@ public class VerifyCodeEditText extends FrameLayout {
     private static final String DEFAULT_HINT = "验证码";
     private static final int DEFAULT_RESEND_TIME = 60;
     private static final String DEFAULT_BUTTON_TEXT = "免费获取";
+    private static final String BUTTON_TEXT_COUNTDOWN = "剩余%ss";
     private static final int DEFAULT_UNDERLINE_COLOR = Color.BLACK;
+    private static final int DEFAULT_UNDERLINE_HEIGHT = 1;
 
-    private static final int DEFAULT_PRESSED_COLOR =  Color.parseColor("#bedda8");
+    private static final int DEFAULT_PRESSED_COLOR = Color.parseColor("#bedda8");
     private static final int DEFAULT_DISABLED_COLOR = Color.parseColor("#bbbbbb");
-    private static final int DEFAULT_NORMAL_COLOR =   Color.parseColor("#7dba50");
+    private static final int DEFAULT_NORMAL_COLOR = Color.parseColor("#7dba50");
 
-    private static final int[] STATE_PRESSED  = {android.R.attr.state_pressed};
+    private static final int[] STATE_PRESSED = {android.R.attr.state_pressed};
     private static final int[] STATE_DISABLED = {-android.R.attr.state_enabled};
-    private static final int[] STATE_NORMAL   = {};
-
+    private static final int[] STATE_NORMAL = {};
 
     /**
      * 用在背景跟文字上的颜色
      */
-    private static final ColorStateList DEFAULT_BUTTON_COLOR;
-//    private static final Drawable DEFAULT_BUTTON_BACKGROUND;
+    private static final ColorStateList DEFAULT_BUTTON_TEXT_COLOR;
 
     private static final int DEFAULT_SHAPE_CORNER = 4;
     private static final int DEFAULT_SHAPE_STROKE_WIDTH = 1;
@@ -70,8 +71,11 @@ public class VerifyCodeEditText extends FrameLayout {
     private View mViewUnderline;
 
     private int mResendTime;
-
     private int mLastCursorColor = -1;
+    private boolean mShowButtonBorder;
+    private boolean mIsCountdown;
+    private int mLeftTime;
+    private String mButtonText;
 
     static {
 
@@ -81,22 +85,64 @@ public class VerifyCodeEditText extends FrameLayout {
         states[2] = STATE_NORMAL;
 
         int[] colors = {
-            DEFAULT_PRESSED_COLOR,
-            DEFAULT_DISABLED_COLOR,
-            DEFAULT_NORMAL_COLOR
+                DEFAULT_PRESSED_COLOR,
+                DEFAULT_DISABLED_COLOR,
+                DEFAULT_NORMAL_COLOR
         };
 
-        DEFAULT_BUTTON_COLOR = new ColorStateList(states, colors);
+        DEFAULT_BUTTON_TEXT_COLOR = new ColorStateList(states, colors);
     }
 
-    /**
-     * 获取验证码按钮的背景
-     */
-    private GradientDrawable mGradientDrawable;
+    private Handler mHandler = new Handler();
+
+    private Runnable updateButtonTextTask = new Runnable() {
+        @Override
+        public void run() {
+            updateButtonTextWhenCountdown();
+        }
+    };
+
+    public void startCountdown() {
+        mIsCountdown = true;
+        setButtonEnabled(false);
+        updateButtonTextWhenCountdown();
+    }
+
+    public void cancelCountdown() {
+        if (! mIsCountdown) {
+            return;
+        }
+        mIsCountdown = false;
+        mHandler.removeCallbacks(updateButtonTextTask);
+        setButtonEnabled(true);
+        mLeftTime = mResendTime;
+        mTextSendVerify.setText(mButtonText);
+    }
+
+    private void updateButtonTextWhenCountdown() {
+        mLeftTime --;
+        if (mLeftTime <= 0) {
+            cancelCountdown();
+            return;
+        }
+        mTextSendVerify.setText(String.format(BUTTON_TEXT_COUNTDOWN, mLeftTime));
+        mHandler.postDelayed(updateButtonTextTask, 1000);
+    }
+
+    public interface OnVerifyButtonClickListener {
+        void onVerifyButtonClick();
+    }
+
+    private OnVerifyButtonClickListener mOnButtonClickListener;
+
+    public void setOnVerifyButtonClickListener(OnVerifyButtonClickListener l) {
+        mOnButtonClickListener = l;
+    }
 
     public VerifyCodeEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.verify_edit_layout, this);
+
         mEditText = (EditText) findViewById(R.id.edit_input);
         mTextSendVerify = (TextView) findViewById(R.id.text_send_verifyCode);
         mViewUnderline = findViewById(R.id.view_underline);
@@ -104,6 +150,7 @@ public class VerifyCodeEditText extends FrameLayout {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.VerifyCodeEditText);
 
         int cursorDrawableResId = a.getResourceId(R.styleable.VerifyCodeEditText_cursorDrawable, -1);
+        int cursorColor = a.getColor(R.styleable.VerifyCodeEditText_cursorColor, -1);
         String hint = a.getString(R.styleable.VerifyCodeEditText_hint);
         int hintColor = a.getColor(R.styleable.VerifyCodeEditText_hintColor, -1);
         int textSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_textSize, -1);
@@ -113,7 +160,7 @@ public class VerifyCodeEditText extends FrameLayout {
 
         ColorStateList buttonTextColor = a.getColorStateList(R.styleable.VerifyCodeEditText_buttonTextColor);
         int buttonTextSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_buttonTextSize, -1);
-        int buttonBackground = a.getResourceId(R.styleable.VerifyCodeEditText_buttonBackground, -1);
+        Drawable buttonBackground = a.getDrawable(R.styleable.VerifyCodeEditText_buttonBackground);
         int buttonMarginBottom = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_buttonMarginBottom, -1);
         String buttonText = a.getString(R.styleable.VerifyCodeEditText_buttonText);
 
@@ -121,11 +168,13 @@ public class VerifyCodeEditText extends FrameLayout {
         int underLineHeight = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_underlineHeight, -1);
 
         boolean gravityCenterVertical = a.getBoolean(R.styleable.VerifyCodeEditText_gravityCenterVertical, true);
+        mShowButtonBorder = a.getBoolean(R.styleable.VerifyCodeEditText_showButtonBorder, true);
 
         mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, -1);
         a.recycle();
 
         setCursorDrawable(cursorDrawableResId);
+        setCursorColor(cursorColor);
         setHint(hint);
         setHintColor(hintColor);
         setTextSize(textSize);
@@ -144,6 +193,15 @@ public class VerifyCodeEditText extends FrameLayout {
 
         setGravityCenterVertical(gravityCenterVertical);
         setResendTime(mResendTime);
+
+        mTextSendVerify.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnButtonClickListener != null) {
+                    mOnButtonClickListener.onVerifyButtonClick();
+                }
+            }
+        });
     }
 
     /**
@@ -195,37 +253,33 @@ public class VerifyCodeEditText extends FrameLayout {
 
     public void setButtonTextColor(ColorStateList color) {
         if (color == null) {
-//            color = ContextCompat.getColorStateList(getContext(), DEFAULT_BUTTON_TEXT_COLOR);
+            color = DEFAULT_BUTTON_TEXT_COLOR;
         }
         mTextSendVerify.setTextColor(color);
     }
 
-    public void setButtonBackground(int drawable) {
-        if (drawable == -1) {
-//            mTextSendVerify.setBackground(DEFAULT_BUTTON_BACKGROUND);
+    public void setButtonBackground(Drawable drawable) {
+        if (drawable == null) {
+            if (! mShowButtonBorder) {
+                return;
+            }
+            drawable = generateDefaultButtonBackground();
         }
-        mTextSendVerify.setBackgroundResource(drawable);
+        mTextSendVerify.setBackgroundDrawable(drawable);
     }
 
-    @TargetApi(VERSION_CODES.LOLLIPOP)
-    private GradientDrawable generateDefaultShape() {
-        GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-        gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), DEFAULT_BUTTON_COLOR);
-        return gradientDrawable;
+    public void setButtonEnabled(boolean enabled) {
+        mTextSendVerify.setEnabled(enabled);
     }
 
-    private GradientDrawable generateShape(int strokeColor) {
-        GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-        gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor);
-        return gradientDrawable;
-    }
-
-    /**
-     * Api 21 以下不能在 shape 中设置 ColorStateList ，所以只能创建 selector
-     */
-    private StateListDrawable generateDefaultSelector() {
+    private Drawable generateDefaultButtonBackground() {
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+            GradientDrawable gradientDrawable = new GradientDrawable();
+            gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
+            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), DEFAULT_BUTTON_TEXT_COLOR);
+            setGradientDrawablePadding(gradientDrawable, dp2px(10), dp2px(5), dp2px(10), dp2px(5));
+            return gradientDrawable;
+        }
         StateListDrawable stateListDrawable = new StateListDrawable();
         stateListDrawable.addState(STATE_PRESSED, generateShape(DEFAULT_PRESSED_COLOR));
         stateListDrawable.addState(STATE_DISABLED, generateShape(DEFAULT_DISABLED_COLOR));
@@ -233,11 +287,31 @@ public class VerifyCodeEditText extends FrameLayout {
         return stateListDrawable;
     }
 
+    private GradientDrawable generateShape(int strokeColor) {
+        GradientDrawable gradientDrawable = new GradientDrawable();
+        gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
+        gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor);
+        setGradientDrawablePadding(gradientDrawable, dp2px(10), dp2px(5), dp2px(10), dp2px(5));
+        return gradientDrawable;
+    }
+
+    private void setGradientDrawablePadding(GradientDrawable gd, int left, int top, int right, int bottom) {
+        try {
+            Field f = GradientDrawable.class.getDeclaredField("mPadding");
+            f.setAccessible(true);
+            Rect rect = new Rect(left, top, right, bottom);
+            f.set(gd, rect);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void setResendTime(int time) {
         if (time <= 0) {
             time = DEFAULT_RESEND_TIME;
         }
         mResendTime = time;
+        mLeftTime = time;
     }
 
     public void setButtonBottomMargin(int margin) {
@@ -250,6 +324,7 @@ public class VerifyCodeEditText extends FrameLayout {
         if (TextUtils.isEmpty(text)) {
             text = DEFAULT_BUTTON_TEXT;
         }
+        mButtonText = text;
         mTextSendVerify.setText(text);
     }
 
@@ -261,9 +336,10 @@ public class VerifyCodeEditText extends FrameLayout {
     }
 
     public void setUnderLineHeight(int height) {
-        if (height > 0) {
-            mViewUnderline.getLayoutParams().height = height;
+        if (height < 0) {
+            height = dp2px(DEFAULT_UNDERLINE_HEIGHT);
         }
+        mViewUnderline.getLayoutParams().height = height;
     }
 
     public void setGravityCenterVertical(boolean centerVertical) {
@@ -272,34 +348,11 @@ public class VerifyCodeEditText extends FrameLayout {
         if (centerVertical) {
             lpEdit.gravity = Gravity.CENTER_VERTICAL;
             lpText.gravity = Gravity.CENTER_VERTICAL | Gravity.RIGHT;
-        } else {
+        }
+        else {
             lpEdit.gravity = Gravity.BOTTOM;
             lpText.gravity = Gravity.BOTTOM | Gravity.RIGHT;
         }
-    }
-
-    /**
-     * 设置获取验证码按钮的背景跟按钮文字颜色
-     * @param pressedColor 按下时背景跟文字的颜色值
-     * @param disabledColor 可不点击时背景跟文字的颜色值
-     * @param normalColor 正常状态下背景跟文字的颜色值
-     */
-    public void setButtonColorByColorValue(@ColorInt int pressedColor,
-                                           @ColorInt int disabledColor,
-                                           @ColorInt int normalColor) {
-
-    }
-
-    /**
-     * 设置获取验证码按钮的背景跟按钮文字颜色
-     * @param pressedColorRes 按下时背景跟文字的颜色资源 id
-     * @param disabledColorRes 可不点击时背景跟文字的颜色资源 id
-     * @param normalColorRes 正常状态下背景跟文字的颜色资源 id
-     */
-    public void setButtonColorByColorResource(@ColorRes int pressedColorRes,
-                                              @ColorRes int disabledColorRes,
-                                              @ColorRes int normalColorRes) {
-
     }
 
     /**
@@ -320,26 +373,6 @@ public class VerifyCodeEditText extends FrameLayout {
     }
 
     /**
-     * 设置光标的宽度
-     * @param width 光标的宽度，单位为 dp
-     */
-    public void setCursorWidth(int width, int color) {
-        if (mLastCursorColor == color) {
-            return;
-        }
-        mLastCursorColor = color;
-
-        GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setSize(dp2px(width), 0);
-        gradientDrawable.setColor(color);
-
-        Drawable[] drawables = getCursorDrawable();
-        for (Drawable d : drawables) {
-            DrawableCompat.setTint(d, color);
-        }
-    }
-
-    /**
      * 设置光标的颜色
      * {@see #setCursorDrawable(int)}
      *
@@ -351,10 +384,21 @@ public class VerifyCodeEditText extends FrameLayout {
         }
         mLastCursorColor = color;
 
-        Drawable[] drawables = getCursorDrawable();
-        for (Drawable d : drawables) {
-            DrawableCompat.setTint(d, color);
+        int res = 0;
+        try {
+            Field f = TextView.class.getDeclaredField("mCursorDrawableRes");
+            f.setAccessible(true);
+            res = f.getInt(mEditText);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
+        Drawable drawable = ContextCompat.getDrawable(mEditText.getContext(), res);
+        DrawableCompat.setTint(drawable, color);
+
+        Drawable[] drawables = new Drawable[2];
+        drawables[0] = drawables[1] = drawable;
+        setCursorDrawable(drawables);
     }
 
     /**
@@ -367,7 +411,7 @@ public class VerifyCodeEditText extends FrameLayout {
         setCursorColor(ContextCompat.getColor(getContext(), colorRes));
     }
 
-    private Drawable[] getCursorDrawable() {
+    private void setCursorDrawable(Drawable[] drawables) {
         try {
             Field fEditor = TextView.class.getDeclaredField("mEditor");
             fEditor.setAccessible(true);
@@ -376,11 +420,10 @@ public class VerifyCodeEditText extends FrameLayout {
             Class<?> clazz = editor.getClass();
             Field fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
             fCursorDrawable.setAccessible(true);
-            Drawable[] drawables = new Drawable[2];
-            return drawables;
-        } catch (Exception ex) {
+            fCursorDrawable.set(mEditText, drawables);
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
-            return null;
         }
     }
 
@@ -393,7 +436,6 @@ public class VerifyCodeEditText extends FrameLayout {
     }
 
     private int applyDimension(int unit, int value) {
-        DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
-        return (int) TypedValue.applyDimension(unit, value, dm);
+        return (int) TypedValue.applyDimension(unit, value, getContext().getResources().getDisplayMetrics());
     }
 }

@@ -3,6 +3,7 @@
     <declare-styleable name="VerifyCodeEditText">
 
         <attr name="cursorDrawable" format="reference"/>
+        <attr name="cursorColor" format="color"/>
         <attr name="hint" format="string"/>
         <attr name="hintColor" format="color"/>
         <attr name="textSize" format="dimension"/>
@@ -21,6 +22,8 @@
         <attr name="resendTime" format="integer"/>
         <!-- 获取验证码按钮可点击时的文字内容 -->
         <attr name="buttonText" format="string"/>
+        <!-- 是否显示获取验证码按钮的边框 -->
+        <attr name="showButtonBorder" format="boolean"/>
 
         <attr name="underlineColor" format="color"/>
         <attr name="underlineHeight" format="dimension"/>
