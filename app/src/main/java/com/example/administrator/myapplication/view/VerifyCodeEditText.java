@@ -33,6 +33,8 @@ import com.example.administrator.myapplication.R;
 
 import java.lang.reflect.Field;
 
+import retrofit2.http.GET;
+
 /**
  * Created by hua on 2017/1/11.
  * <p>
@@ -65,6 +67,10 @@ public class VerifyCodeEditText extends FrameLayout {
 
     private static final int DEFAULT_SHAPE_CORNER = 4;
     private static final int DEFAULT_SHAPE_STROKE_WIDTH = 1;
+    private static final int DEFAULT_BUTTON_PADDING_LEFT = 10;
+    private static final int DEFAULT_BUTTON_PADDING_RIGHT = 10;
+    private static final int DEFAULT_BUTTON_PADDING_TOP = 5;
+    private static final int DEFAULT_BUTTON_PADDING_BOTTOM = 5;
 
     private EditText mEditText;
     private TextView mTextSendVerify;
@@ -76,6 +82,7 @@ public class VerifyCodeEditText extends FrameLayout {
     private boolean mIsCountdown;
     private int mLeftTime;
     private String mButtonText;
+    private Drawable mDefaultButtonBackground;
 
     static {
 
@@ -171,6 +178,7 @@ public class VerifyCodeEditText extends FrameLayout {
         mShowButtonBorder = a.getBoolean(R.styleable.VerifyCodeEditText_showButtonBorder, true);
 
         mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, -1);
+        ColorStateList tint = a.getColorStateList(R.styleable.VerifyCodeEditText_tint);
         a.recycle();
 
         setCursorDrawable(cursorDrawableResId);
@@ -193,6 +201,8 @@ public class VerifyCodeEditText extends FrameLayout {
 
         setGravityCenterVertical(gravityCenterVertical);
         setResendTime(mResendTime);
+
+        setTint(tint);
 
         mTextSendVerify.setOnClickListener(new OnClickListener() {
             @Override
@@ -264,8 +274,36 @@ public class VerifyCodeEditText extends FrameLayout {
                 return;
             }
             drawable = generateDefaultButtonBackground();
+            mDefaultButtonBackground = drawable;
         }
         mTextSendVerify.setBackgroundDrawable(drawable);
+    }
+
+    /**
+     * 设置获取验证码按钮的文字跟背景的颜色
+     */
+    public void setTint(ColorStateList colorStateList) {
+       if (colorStateList != null) {
+           mTextSendVerify.setTextColor(colorStateList);
+
+           if (mShowButtonBorder && mDefaultButtonBackground != null) {
+               if (mDefaultButtonBackground instanceof GradientDrawable) {
+                   GradientDrawable gradientDrawable = (GradientDrawable) mDefaultButtonBackground;
+                   gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), colorStateList);
+               } else {
+//                   DrawableCompat.setTintList(mDefaultButtonBackground, colorStateList);
+//                   mDefaultButtonBackground.setTintList(colorStateList);
+                   // TODO 改成 ColorStateList
+                   int colorPressed = colorStateList.getColorForState(STATE_PRESSED, 0);
+                   int colorDisabled = colorStateList.getColorForState(STATE_DISABLED, 0);
+                   int colorNormal = colorStateList.getColorForState(STATE_NORMAL, 0);
+                   StateListDrawable stateListDrawable = new StateListDrawable();
+                   stateListDrawable.addState(STATE_PRESSED, generateShape(colorPressed, true));
+                   stateListDrawable.addState(STATE_DISABLED, generateShape(colorDisabled, true));
+                   stateListDrawable.addState(STATE_NORMAL, generateShape(colorNormal, true));
+               }
+           }
+       }
     }
 
     public void setButtonEnabled(boolean enabled) {
@@ -274,25 +312,42 @@ public class VerifyCodeEditText extends FrameLayout {
 
     private Drawable generateDefaultButtonBackground() {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-            GradientDrawable gradientDrawable = new GradientDrawable();
-            gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), DEFAULT_BUTTON_TEXT_COLOR);
-            setGradientDrawablePadding(gradientDrawable, dp2px(10), dp2px(5), dp2px(10), dp2px(5));
-            return gradientDrawable;
+//            GradientDrawable gradientDrawable = new GradientDrawable();
+//            gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
+//            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), DEFAULT_BUTTON_TEXT_COLOR);
+//            setGradientDrawablePadding(gradientDrawable,
+//                    dp2px(DEFAULT_BUTTON_PADDING_LEFT),
+//                    dp2px(DEFAULT_BUTTON_PADDING_TOP),
+//                    dp2px(DEFAULT_BUTTON_PADDING_RIGHT),
+//                    dp2px(DEFAULT_BUTTON_PADDING_BOTTOM));
+//            return gradientDrawable;
+            generateShape(DEFAULT_BUTTON_TEXT_COLOR, false);
         }
-        StateListDrawable stateListDrawable = new StateListDrawable();
-        stateListDrawable.addState(STATE_PRESSED, generateShape(DEFAULT_PRESSED_COLOR));
-        stateListDrawable.addState(STATE_DISABLED, generateShape(DEFAULT_DISABLED_COLOR));
-        stateListDrawable.addState(STATE_NORMAL, generateShape(DEFAULT_NORMAL_COLOR));
-        return stateListDrawable;
+        return generateSelector(DEFAULT_PRESSED_COLOR, DEFAULT_DISABLED_COLOR, DEFAULT_NORMAL_COLOR);
     }
 
-    private GradientDrawable generateShape(int strokeColor) {
+    private GradientDrawable generateShape(ColorStateList strokeColor, boolean singleColor) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-        gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor);
-        setGradientDrawablePadding(gradientDrawable, dp2px(10), dp2px(5), dp2px(10), dp2px(5));
+        if (singleColor) {
+            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor.getDefaultColor());
+        } else {
+            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor);
+        }
+        setGradientDrawablePadding(gradientDrawable,
+                dp2px(DEFAULT_BUTTON_PADDING_LEFT),
+                dp2px(DEFAULT_BUTTON_PADDING_TOP),
+                dp2px(DEFAULT_BUTTON_PADDING_RIGHT),
+                dp2px(DEFAULT_BUTTON_PADDING_BOTTOM));
         return gradientDrawable;
+    }
+
+    private StateListDrawable generateSelector(int pressedColor, int disabledColor, int normalColor) {
+        StateListDrawable stateListDrawable = new StateListDrawable();
+        stateListDrawable.addState(STATE_PRESSED, generateShape(ColorStateList.valueOf(pressedColor), true));
+        stateListDrawable.addState(STATE_DISABLED, generateShape(ColorStateList.valueOf(disabledColor), true));
+        stateListDrawable.addState(STATE_NORMAL, generateShape(ColorStateList.valueOf(normalColor), true));
+        return stateListDrawable;
     }
 
     private void setGradientDrawablePadding(GradientDrawable gd, int left, int top, int right, int bottom) {

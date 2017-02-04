@@ -28,8 +28,8 @@
         <attr name="underlineColor" format="color"/>
         <attr name="underlineHeight" format="dimension"/>
 
-        <!--  -->
         <attr name="gravityCenterVertical" format="boolean"/>
+        <attr name="tint" format="color"/>
 
     </declare-styleable>
 </resources>

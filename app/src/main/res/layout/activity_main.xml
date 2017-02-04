@@ -18,7 +18,7 @@
         app:hint="hehe"
         app:textColor="@color/colorAccent"
         app:underlineColor="@color/colorPrimary"
-        />
+        app:tint="@color/color"/>
 
     <Button
         android:id="@+id/btn"
