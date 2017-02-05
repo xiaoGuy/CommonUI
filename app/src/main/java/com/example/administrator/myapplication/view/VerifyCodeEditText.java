@@ -33,8 +33,6 @@ import com.example.administrator.myapplication.R;
 
 import java.lang.reflect.Field;
 
-import retrofit2.http.GET;
-
 /**
  * Created by hua on 2017/1/11.
  * <p>
@@ -43,6 +41,8 @@ import retrofit2.http.GET;
  */
 
 public class VerifyCodeEditText extends FrameLayout {
+
+    private static final String TAG = VerifyCodeEditText.class.getSimpleName();
 
     private static final int DEFAULT_VERIFY_CODE_LENGTH = 6;
     private static final String DEFAULT_HINT = "验证码";
@@ -202,7 +202,7 @@ public class VerifyCodeEditText extends FrameLayout {
         setGravityCenterVertical(gravityCenterVertical);
         setResendTime(mResendTime);
 
-        setTint(tint);
+        setButtonTint(tint);
 
         mTextSendVerify.setOnClickListener(new OnClickListener() {
             @Override
@@ -282,7 +282,7 @@ public class VerifyCodeEditText extends FrameLayout {
     /**
      * 设置获取验证码按钮的文字跟背景的颜色
      */
-    public void setTint(ColorStateList colorStateList) {
+    public void setButtonTint(ColorStateList colorStateList) {
        if (colorStateList != null) {
            mTextSendVerify.setTextColor(colorStateList);
 
@@ -291,16 +291,11 @@ public class VerifyCodeEditText extends FrameLayout {
                    GradientDrawable gradientDrawable = (GradientDrawable) mDefaultButtonBackground;
                    gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), colorStateList);
                } else {
-//                   DrawableCompat.setTintList(mDefaultButtonBackground, colorStateList);
-//                   mDefaultButtonBackground.setTintList(colorStateList);
-                   // TODO 改成 ColorStateList
-                   int colorPressed = colorStateList.getColorForState(STATE_PRESSED, 0);
-                   int colorDisabled = colorStateList.getColorForState(STATE_DISABLED, 0);
-                   int colorNormal = colorStateList.getColorForState(STATE_NORMAL, 0);
-                   StateListDrawable stateListDrawable = new StateListDrawable();
-                   stateListDrawable.addState(STATE_PRESSED, generateShape(colorPressed, true));
-                   stateListDrawable.addState(STATE_DISABLED, generateShape(colorDisabled, true));
-                   stateListDrawable.addState(STATE_NORMAL, generateShape(colorNormal, true));
+                   int colorDisabled = colorStateList.getColorForState(new int[]{-android.R.attr.state_enabled}, Color.RED);
+                   int colorPressed = colorStateList.getColorForState(new int[]{android.R.attr.state_pressed}, Color.RED);
+                   int colorNormal = colorStateList.getDefaultColor();
+                   Drawable drawable = generateSelector(colorPressed, colorDisabled, colorNormal);
+                   mTextSendVerify.setBackgroundDrawable(drawable);
                }
            }
        }
@@ -310,18 +305,12 @@ public class VerifyCodeEditText extends FrameLayout {
         mTextSendVerify.setEnabled(enabled);
     }
 
+    /**
+     * 5.0 之前，shape 中不能使用 colorStateList，只能用 selector 来实现
+     */
     private Drawable generateDefaultButtonBackground() {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-//            GradientDrawable gradientDrawable = new GradientDrawable();
-//            gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-//            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), DEFAULT_BUTTON_TEXT_COLOR);
-//            setGradientDrawablePadding(gradientDrawable,
-//                    dp2px(DEFAULT_BUTTON_PADDING_LEFT),
-//                    dp2px(DEFAULT_BUTTON_PADDING_TOP),
-//                    dp2px(DEFAULT_BUTTON_PADDING_RIGHT),
-//                    dp2px(DEFAULT_BUTTON_PADDING_BOTTOM));
-//            return gradientDrawable;
-            generateShape(DEFAULT_BUTTON_TEXT_COLOR, false);
+            return generateShape(DEFAULT_BUTTON_TEXT_COLOR, false);
         }
         return generateSelector(DEFAULT_PRESSED_COLOR, DEFAULT_DISABLED_COLOR, DEFAULT_NORMAL_COLOR);
     }
@@ -449,7 +438,7 @@ public class VerifyCodeEditText extends FrameLayout {
         }
 
         Drawable drawable = ContextCompat.getDrawable(mEditText.getContext(), res);
-        DrawableCompat.setTint(drawable, color);
+        setTint(drawable, color);
 
         Drawable[] drawables = new Drawable[2];
         drawables[0] = drawables[1] = drawable;
@@ -475,7 +464,7 @@ public class VerifyCodeEditText extends FrameLayout {
             Class<?> clazz = editor.getClass();
             Field fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
             fCursorDrawable.setAccessible(true);
-            fCursorDrawable.set(mEditText, drawables);
+            fCursorDrawable.set(editor, drawables);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -492,5 +481,15 @@ public class VerifyCodeEditText extends FrameLayout {
 
     private int applyDimension(int unit, int value) {
         return (int) TypedValue.applyDimension(unit, value, getContext().getResources().getDisplayMetrics());
+    }
+
+    private void setTint(Drawable drawable, int color) {
+        drawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTint(drawable, color);
+    }
+
+    private void setTintList(Drawable drawable, ColorStateList color) {
+        drawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTintList(drawable, color);
     }
 }

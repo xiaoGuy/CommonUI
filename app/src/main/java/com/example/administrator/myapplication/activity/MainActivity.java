@@ -1,7 +1,12 @@
 package com.example.administrator.myapplication.activity;
 
+import android.content.res.ColorStateList;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.Button;
 
 import com.example.administrator.myapplication.R;
@@ -14,6 +19,8 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements OnVerifyButtonClickListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     @BindView(R.id.verifyEdit)
     VerifyCodeEditText mVerifyEdit;
     @BindView(R.id.btn)
@@ -25,7 +32,15 @@ public class MainActivity extends AppCompatActivity implements OnVerifyButtonCli
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        mVerifyEdit.setOnVerifyButtonClickListener(this);
+        ColorStateList colorStateList = ContextCompat.getColorStateList(this, R.color.color);
+
+        int colorPressed = colorStateList.getColorForState(new int[]{-android.R.attr.state_pressed}, 0);
+        int colorDisabled = colorStateList.getColorForState(new int[]{-android.R.attr.state_enabled}, 0);
+
+        Log.d(TAG, "pressed [" + android.R.attr.state_pressed + "] " + "#" + Integer.toHexString(colorPressed) + " " + colorPressed);
+        Log.d(TAG, "disabled [" + -android.R.attr.state_enabled + "] " + "#" + Integer.toHexString(colorDisabled) + " " + colorDisabled);
+
+
     }
 
     @Override
@@ -35,7 +50,11 @@ public class MainActivity extends AppCompatActivity implements OnVerifyButtonCli
 
     @OnClick(R.id.btn)
     public void onClick() {
-        mVerifyEdit.cancelCountdown();
+
+        StateListDrawable drawable = (StateListDrawable) mBtn.getBackground();
+        DrawableCompat.wrap(drawable);
+        DrawableCompat.setTintList(drawable, ContextCompat.getColorStateList(this, R.color.color2));
+
     }
 
     private void f() {
