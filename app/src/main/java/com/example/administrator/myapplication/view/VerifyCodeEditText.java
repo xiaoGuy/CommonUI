@@ -16,6 +16,7 @@ import android.text.InputFilter;
 import android.text.InputFilter.LengthFilter;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -30,9 +31,6 @@ import java.lang.reflect.Field;
 
 /**
  * Created by hua on 2017/1/11.
- * <p>
- * 1. 改成用代码生成 Shape
- * 2. 改成用代码生成 ColorStateList
  */
 
 public class VerifyCodeEditText extends FrameLayout {
@@ -42,8 +40,8 @@ public class VerifyCodeEditText extends FrameLayout {
     private static final int DEFAULT_VERIFY_CODE_LENGTH = 6;
     private static final String DEFAULT_HINT = "验证码";
     private static final int DEFAULT_RESEND_TIME = 60;
-    private static final String DEFAULT_BUTTON_TEXT = "免费获取";
-    private static final String BUTTON_TEXT_COUNTDOWN = "剩余%ss";
+    private static final String DEFAULT_BUTTON_TEXT = "获取验证码";
+    private static final String DEFAULT_WAITING_TEXT = "%s秒后重新获取";
     private static final int DEFAULT_UNDERLINE_COLOR = Color.BLACK;
     private static final int DEFAULT_UNDERLINE_HEIGHT = 1;
 
@@ -66,10 +64,10 @@ public class VerifyCodeEditText extends FrameLayout {
 
     private int mResendTime;
     private int mLastCursorColor = -1;
-    private boolean mShowDefaultButtonBackground;
     private boolean mIsCountdown;
     private int mLeftTime;
     private String mButtonText;
+    private String mWaitingText;
 
     static {
 
@@ -119,7 +117,7 @@ public class VerifyCodeEditText extends FrameLayout {
             cancelCountdown();
             return;
         }
-        mTextSendVerify.setText(String.format(BUTTON_TEXT_COUNTDOWN, mLeftTime));
+        mTextSendVerify.setText(String.format(mWaitingText, mLeftTime));
         mHandler.postDelayed(updateButtonTextTask, 1000);
     }
 
@@ -157,6 +155,7 @@ public class VerifyCodeEditText extends FrameLayout {
         Drawable buttonBackground = a.getDrawable(R.styleable.VerifyCodeEditText_buttonBackground);
         int buttonMarginBottom = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_buttonMarginBottom, -1);
         String buttonText = a.getString(R.styleable.VerifyCodeEditText_buttonText);
+        String waitingText = a.getString(R.styleable.VerifyCodeEditText_waitingText);
 
         int underLineColor = a.getColor(R.styleable.VerifyCodeEditText_underlineColor, -1);
         int underLineHeight = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_underlineHeight, -1);
@@ -180,6 +179,7 @@ public class VerifyCodeEditText extends FrameLayout {
         setButtonBackground(buttonBackground);
         setButtonBottomMargin(buttonMarginBottom);
         setButtonText(buttonText);
+        setWaitingText(waitingText);
 
         setUnderLineColor(underLineColor);
         setUnderLineHeight(underLineHeight);
@@ -281,6 +281,17 @@ public class VerifyCodeEditText extends FrameLayout {
         }
         mButtonText = text;
         mTextSendVerify.setText(text);
+    }
+
+    public void setWaitingText(String text) {
+        if (TextUtils.isEmpty(text)) {
+            mWaitingText = DEFAULT_WAITING_TEXT;
+        } else if (text.indexOf("%s") == -1) {
+            Log.e(TAG, "setWaitingText() must contain %s ");
+            mWaitingText = DEFAULT_WAITING_TEXT;
+        } else {
+            mWaitingText = text;
+        }
     }
 
     public void setUnderLineColor(int color) {
