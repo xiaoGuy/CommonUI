@@ -5,12 +5,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.StateListDrawable;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -63,14 +58,7 @@ public class VerifyCodeEditText extends FrameLayout {
     /**
      * 用在背景跟文字上的颜色
      */
-    private static final ColorStateList DEFAULT_BUTTON_TEXT_COLOR;
-
-    private static final int DEFAULT_SHAPE_CORNER = 4;
-    private static final int DEFAULT_SHAPE_STROKE_WIDTH = 1;
-    private static final int DEFAULT_BUTTON_PADDING_LEFT = 10;
-    private static final int DEFAULT_BUTTON_PADDING_RIGHT = 10;
-    private static final int DEFAULT_BUTTON_PADDING_TOP = 5;
-    private static final int DEFAULT_BUTTON_PADDING_BOTTOM = 5;
+    private static final ColorStateList DEFAULT_BUTTON_COLOR;
 
     private EditText mEditText;
     private TextView mTextSendVerify;
@@ -78,11 +66,10 @@ public class VerifyCodeEditText extends FrameLayout {
 
     private int mResendTime;
     private int mLastCursorColor = -1;
-    private boolean mShowButtonBorder;
+    private boolean mShowDefaultButtonBackground;
     private boolean mIsCountdown;
     private int mLeftTime;
     private String mButtonText;
-    private Drawable mDefaultButtonBackground;
 
     static {
 
@@ -97,7 +84,7 @@ public class VerifyCodeEditText extends FrameLayout {
                 DEFAULT_NORMAL_COLOR
         };
 
-        DEFAULT_BUTTON_TEXT_COLOR = new ColorStateList(states, colors);
+        DEFAULT_BUTTON_COLOR = new ColorStateList(states, colors);
     }
 
     private Handler mHandler = new Handler();
@@ -175,10 +162,8 @@ public class VerifyCodeEditText extends FrameLayout {
         int underLineHeight = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_underlineHeight, -1);
 
         boolean gravityCenterVertical = a.getBoolean(R.styleable.VerifyCodeEditText_gravityCenterVertical, true);
-        mShowButtonBorder = a.getBoolean(R.styleable.VerifyCodeEditText_showButtonBorder, true);
 
         mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, -1);
-        ColorStateList tint = a.getColorStateList(R.styleable.VerifyCodeEditText_tint);
         a.recycle();
 
         setCursorDrawable(cursorDrawableResId);
@@ -201,8 +186,6 @@ public class VerifyCodeEditText extends FrameLayout {
 
         setGravityCenterVertical(gravityCenterVertical);
         setResendTime(mResendTime);
-
-        setButtonTint(tint);
 
         mTextSendVerify.setOnClickListener(new OnClickListener() {
             @Override
@@ -263,91 +246,19 @@ public class VerifyCodeEditText extends FrameLayout {
 
     public void setButtonTextColor(ColorStateList color) {
         if (color == null) {
-            color = DEFAULT_BUTTON_TEXT_COLOR;
+            color = DEFAULT_BUTTON_COLOR;
         }
         mTextSendVerify.setTextColor(color);
     }
 
     public void setButtonBackground(Drawable drawable) {
-        if (drawable == null) {
-            if (! mShowButtonBorder) {
-                return;
-            }
-            drawable = generateDefaultButtonBackground();
-            mDefaultButtonBackground = drawable;
+        if (drawable != null) {
+            mTextSendVerify.setBackgroundDrawable(drawable);
         }
-        mTextSendVerify.setBackgroundDrawable(drawable);
-    }
-
-    /**
-     * 设置获取验证码按钮的文字跟背景的颜色
-     */
-    public void setButtonTint(ColorStateList colorStateList) {
-       if (colorStateList != null) {
-           mTextSendVerify.setTextColor(colorStateList);
-
-           if (mShowButtonBorder && mDefaultButtonBackground != null) {
-               if (mDefaultButtonBackground instanceof GradientDrawable) {
-                   GradientDrawable gradientDrawable = (GradientDrawable) mDefaultButtonBackground;
-                   gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), colorStateList);
-               } else {
-                   int colorDisabled = colorStateList.getColorForState(new int[]{-android.R.attr.state_enabled}, Color.RED);
-                   int colorPressed = colorStateList.getColorForState(new int[]{android.R.attr.state_pressed}, Color.RED);
-                   int colorNormal = colorStateList.getDefaultColor();
-                   Drawable drawable = generateSelector(colorPressed, colorDisabled, colorNormal);
-                   mTextSendVerify.setBackgroundDrawable(drawable);
-               }
-           }
-       }
     }
 
     public void setButtonEnabled(boolean enabled) {
         mTextSendVerify.setEnabled(enabled);
-    }
-
-    /**
-     * 5.0 之前，shape 中不能使用 colorStateList，只能用 selector 来实现
-     */
-    private Drawable generateDefaultButtonBackground() {
-        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-            return generateShape(DEFAULT_BUTTON_TEXT_COLOR, false);
-        }
-        return generateSelector(DEFAULT_PRESSED_COLOR, DEFAULT_DISABLED_COLOR, DEFAULT_NORMAL_COLOR);
-    }
-
-    private GradientDrawable generateShape(ColorStateList strokeColor, boolean singleColor) {
-        GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setCornerRadius(dp2px(DEFAULT_SHAPE_CORNER));
-        if (singleColor) {
-            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor.getDefaultColor());
-        } else {
-            gradientDrawable.setStroke(dp2px(DEFAULT_SHAPE_STROKE_WIDTH), strokeColor);
-        }
-        setGradientDrawablePadding(gradientDrawable,
-                dp2px(DEFAULT_BUTTON_PADDING_LEFT),
-                dp2px(DEFAULT_BUTTON_PADDING_TOP),
-                dp2px(DEFAULT_BUTTON_PADDING_RIGHT),
-                dp2px(DEFAULT_BUTTON_PADDING_BOTTOM));
-        return gradientDrawable;
-    }
-
-    private StateListDrawable generateSelector(int pressedColor, int disabledColor, int normalColor) {
-        StateListDrawable stateListDrawable = new StateListDrawable();
-        stateListDrawable.addState(STATE_PRESSED, generateShape(ColorStateList.valueOf(pressedColor), true));
-        stateListDrawable.addState(STATE_DISABLED, generateShape(ColorStateList.valueOf(disabledColor), true));
-        stateListDrawable.addState(STATE_NORMAL, generateShape(ColorStateList.valueOf(normalColor), true));
-        return stateListDrawable;
-    }
-
-    private void setGradientDrawablePadding(GradientDrawable gd, int left, int top, int right, int bottom) {
-        try {
-            Field f = GradientDrawable.class.getDeclaredField("mPadding");
-            f.setAccessible(true);
-            Rect rect = new Rect(left, top, right, bottom);
-            f.set(gd, rect);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
     public void setResendTime(int time) {

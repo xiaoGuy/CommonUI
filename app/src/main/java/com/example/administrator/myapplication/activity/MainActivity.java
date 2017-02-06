@@ -1,13 +1,9 @@
 package com.example.administrator.myapplication.activity;
 
-import android.content.res.ColorStateList;
-import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import com.example.administrator.myapplication.R;
 import com.example.administrator.myapplication.view.VerifyCodeEditText;
@@ -15,7 +11,6 @@ import com.example.administrator.myapplication.view.VerifyCodeEditText.OnVerifyB
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements OnVerifyButtonClickListener {
 
@@ -23,24 +18,26 @@ public class MainActivity extends AppCompatActivity implements OnVerifyButtonCli
 
     @BindView(R.id.verifyEdit)
     VerifyCodeEditText mVerifyEdit;
-    @BindView(R.id.btn)
+    @BindView(R.id.btn_red)
     Button mBtn;
+
+    @BindView(R.id.image)
+    ImageView mImage;
+    @BindView(R.id.btn_blue)
+    Button mBtnBlue;
+    @BindView(R.id.btn_yellow)
+    Button mBtnYellow;
+
+    @BindView(R.id.btn_filter)
+    Button mBtnFilter;
+    @BindView(R.id.image_2)
+    ImageView mImage2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-        ColorStateList colorStateList = ContextCompat.getColorStateList(this, R.color.color);
-
-        int colorPressed = colorStateList.getColorForState(new int[]{-android.R.attr.state_pressed}, 0);
-        int colorDisabled = colorStateList.getColorForState(new int[]{-android.R.attr.state_enabled}, 0);
-
-        Log.d(TAG, "pressed [" + android.R.attr.state_pressed + "] " + "#" + Integer.toHexString(colorPressed) + " " + colorPressed);
-        Log.d(TAG, "disabled [" + -android.R.attr.state_enabled + "] " + "#" + Integer.toHexString(colorDisabled) + " " + colorDisabled);
-
-
     }
 
     @Override
@@ -48,14 +45,6 @@ public class MainActivity extends AppCompatActivity implements OnVerifyButtonCli
         mVerifyEdit.startCountdown();
     }
 
-    @OnClick(R.id.btn)
-    public void onClick() {
-
-        StateListDrawable drawable = (StateListDrawable) mBtn.getBackground();
-        DrawableCompat.wrap(drawable);
-        DrawableCompat.setTintList(drawable, ContextCompat.getColorStateList(this, R.color.color2));
-
-    }
 
     private void f() {
 //        MutableDateTime start = new MutableDateTime(2017, 1, 1, 0, 0, 0, 0);
