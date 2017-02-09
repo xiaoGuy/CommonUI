@@ -3,48 +3,26 @@ package com.example.administrator.myapplication.activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
-import android.widget.ImageView;
 
 import com.example.administrator.myapplication.R;
-import com.example.administrator.myapplication.view.VerifyCodeEditText;
-import com.example.administrator.myapplication.view.VerifyCodeEditText.OnVerifyButtonClickListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements OnVerifyButtonClickListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    @BindView(R.id.verifyEdit)
-    VerifyCodeEditText mVerifyEdit;
-    @BindView(R.id.btn_red)
+    @BindView(R.id.btn)
     Button mBtn;
-
-    @BindView(R.id.image)
-    ImageView mImage;
-    @BindView(R.id.btn_blue)
-    Button mBtnBlue;
-    @BindView(R.id.btn_yellow)
-    Button mBtnYellow;
-
-    @BindView(R.id.btn_filter)
-    Button mBtnFilter;
-    @BindView(R.id.image_2)
-    ImageView mImage2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-    }
 
-    @Override
-    public void onVerifyButtonClick() {
-        mVerifyEdit.startCountdown();
+//        ((ViewGroup) mBtn.getParent()).getChildAt(0).setEnabled(false);
     }
-
 
     private void f() {
 //        MutableDateTime start = new MutableDateTime(2017, 1, 1, 0, 0, 0, 0);

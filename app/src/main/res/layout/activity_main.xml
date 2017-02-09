@@ -6,51 +6,22 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.example.administrator.myapplication.view.VerifyCodeEditText
-        android:id="@+id/verifyEdit"
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        app:verifyCodeLength="4"
-        app:resendTime="5"
-        app:buttonText="获取验证码"
-        app:cursorColor="#00ff00"
-        app:hintColor="@color/colorPrimary"
-        app:hint="hehe"
-        app:textColor="@color/colorAccent"
-        app:underlineColor="@color/colorPrimary"/>
-
-    <ImageView
-        android:id="@+id/image"
-        android:layout_width="100dp"
-        android:layout_height="100dp"/>
-
-    <ImageView
-        android:id="@+id/image_2"
-        android:layout_width="100dp"
-        android:layout_height="100dp"/>
-
-    <Button
-        android:id="@+id/btn_red"
+    <com.example.administrator.myapplication.view.EasyTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Red"/>
+        android:textSize="18sp"
+        android:textAllCaps="true"
+        android:text="Button"
+        android:gravity="center"
+        android:background="@drawable/shape"
+        />
 
     <Button
-        android:id="@+id/btn_blue"
+        android:id="@+id/btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Blue"/>
-
-    <Button
-        android:id="@+id/btn_yellow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Yellow"/>
-
-    <Button
-        android:id="@+id/btn_filter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Filter"/>
+        android:textSize="18sp"
+        android:text="Button"
+        android:background="@drawable/shape"/>
 
 </LinearLayout>

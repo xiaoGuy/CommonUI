@@ -22,10 +22,24 @@
         <attr name="resendTime" format="integer"/>
         <!-- 获取验证码按钮可点击时的文字内容 -->
         <attr name="buttonText" format="string"/>
+        <attr name="waitingText" format="string"/>
 
         <attr name="underlineColor" format="color"/>
         <attr name="underlineHeight" format="dimension"/>
 
         <attr name="gravityCenterVertical" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="EasyTextView">
+        <attr name="textPressedColor" format="color"/>
+        <attr name="textDisabledColor" format="color"/>
+        <attr name="textNormalColor" format="color"/>
+
+        <attr name="backgroundPressedColor" format="color"/>
+        <attr name="backgroundDisabledColor" format="color"/>
+        <attr name="backgroundNormalColor" format="color"/>
+
+        <attr name="backgroundRadius" format="dimension"/>
+        <attr name="backgroundStrokeWidth" format="dimension"/>
     </declare-styleable>
 </resources>
