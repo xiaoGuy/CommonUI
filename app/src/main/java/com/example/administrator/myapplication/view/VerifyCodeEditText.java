@@ -33,6 +33,7 @@ import java.lang.reflect.Field;
  * Created by hua on 2017/1/11.
  */
 
+// TODO 在 EditText 左边加上 TextView 跟 ImageView
 public class VerifyCodeEditText extends FrameLayout {
 
     private static final String TAG = VerifyCodeEditText.class.getSimpleName();

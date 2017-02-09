@@ -3,7 +3,10 @@ package com.example.administrator.myapplication.view;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -11,6 +14,8 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import com.example.administrator.myapplication.R;
+import com.example.administrator.myapplication.drawable.FixedColorDrawable;
+
 
 /**
  * Created by Administrator on 2017/2/9.
@@ -39,6 +44,7 @@ public class EasyTextView extends TextView {
         super(context);
     }
 
+    @SuppressWarnings("deprecation")
     public EasyTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -66,20 +72,45 @@ public class EasyTextView extends TextView {
         }
 
         if (backgroundPressedColor != -1 && backgroundNormalColor != -1) {
+            setClickable(true);
             if (backgroundDisabledColor == -1) {
                 backgroundDisabledColor = lighterColor(backgroundNormalColor);
             }
             // 如果没有设置圆角或者 stroke ，则使用 ColorDrawable 作为背景
             if (backgroundRadius == -1 && backgroundStrokeWidth == -1) {
+                setTextColor(Color.WHITE);
+                final Drawable drawable;
                 // 5.0 之后就可以使用 ColorDrawable 来实现带状态的颜色，5.0 之前只能通过 StateListDrawable
                 if (AFTER_LOLLIPOP) {
-                    ColorDrawable colorDrawable = new ColorDrawable(backgroundNormalColor);
+                    FixedColorDrawable colorDrawable = new FixedColorDrawable(backgroundNormalColor);
                     colorDrawable.setTintList(createColorStateList(
                             backgroundPressedColor, backgroundDisabledColor, backgroundNormalColor));
                     setBackgroundDrawable(colorDrawable);
+                    drawable = colorDrawable;
                 } else {
-
+                    drawable = createStateListDrawable(STATES,
+                            new ColorDrawable(backgroundPressedColor),
+                            new ColorDrawable(backgroundDisabledColor),
+                            new ColorDrawable(backgroundNormalColor));
                 }
+                setBackgroundDrawable(drawable);
+            } else {
+                final ColorStateList colorStateList = createColorStateList
+                        (backgroundPressedColor, backgroundDisabledColor, backgroundNormalColor);
+                setTextColor(colorStateList);
+                final Drawable drawable;
+                // 5.0 之后 GradientDrawable 可以实现带状态的颜色
+                if (AFTER_LOLLIPOP) {
+                    GradientDrawable gradientDrawable = createGradientDrawable
+                            (backgroundStrokeWidth, backgroundRadius, colorStateList, false);
+                    drawable = gradientDrawable;
+                } else {
+                    drawable = createStateListDrawable(STATES,
+                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundPressedColor), true),
+                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundDisabledColor), true),
+                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundNormalColor), true));
+                }
+                setBackgroundDrawable(drawable);
             }
 
         }
@@ -91,16 +122,30 @@ public class EasyTextView extends TextView {
         if (colors == null || colors.length == 0) {
             return null;
         }
-
         return new ColorStateList(STATES, colors);
     }
 
-    private StateListDrawable createSelector(int... colors) {
-        if (colors == null || colors.length == 0) {
-            return null;
+    private GradientDrawable createGradientDrawable(int width, int radius, ColorStateList color, boolean singleColor) {
+        GradientDrawable gradientDrawable = new GradientDrawable();
+        if (width != -1) {
+            if (singleColor) {
+                gradientDrawable.setStroke(width, color.getDefaultColor());
+            } else {
+                gradientDrawable.setStroke(width, color);
+            }
         }
+        if (radius != -1) {
+            gradientDrawable.setCornerRadius(radius);
+        }
+        return gradientDrawable;
+    }
 
-        
+    private StateListDrawable createStateListDrawable(int[][] states, Drawable... drawables) {
+        StateListDrawable stateListDrawable = new StateListDrawable();
+        stateListDrawable.addState(states[0], drawables[0]);
+        stateListDrawable.addState(states[1], drawables[1]);
+        stateListDrawable.addState(states[2], drawables[2]);
+        return stateListDrawable;
     }
 
     private int lighterColor(int color) {
