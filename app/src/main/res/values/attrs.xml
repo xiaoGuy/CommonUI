@@ -13,6 +13,11 @@
         <!-- 输入框距离底部的间距 -->
         <attr name="editMarginBottom" format="dimension"/>
 
+        <attr name="leftLabel" format="string"/>
+        <attr name="leftLabelSize" format="dimension"/>
+        <!-- 输入框跟标签的间距 -->
+        <attr name="labelPadding" format="dimension"/>
+        <attr name="leftIcon" format="reference"/>
         <!-- 获取验证码按钮的字体大小 -->
         <attr name="buttonTextSize" format="dimension"/>
         <attr name="buttonTextColor" format="reference"/>
@@ -26,6 +31,8 @@
 
         <attr name="underlineColor" format="color"/>
         <attr name="underlineHeight" format="dimension"/>
+        <!-- 下划线是否跟输入框左对齐 -->
+        <attr name="underlineAlignLeftEditText" format="boolean"/>
 
         <attr name="gravityCenterVertical" format="boolean"/>
     </declare-styleable>

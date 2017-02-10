@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.administrator.myapplication.R;
@@ -33,7 +34,7 @@ import java.lang.reflect.Field;
  * Created by hua on 2017/1/11.
  */
 
-// TODO 在 EditText 左边加上 TextView 跟 ImageView
+// TODO 处理好 wrap_content
 public class VerifyCodeEditText extends FrameLayout {
 
     private static final String TAG = VerifyCodeEditText.class.getSimpleName();
@@ -45,6 +46,7 @@ public class VerifyCodeEditText extends FrameLayout {
     private static final String DEFAULT_WAITING_TEXT = "%s秒后重新获取";
     private static final int DEFAULT_UNDERLINE_COLOR = Color.BLACK;
     private static final int DEFAULT_UNDERLINE_HEIGHT = 1;
+    private static final int DEFAULT_LABEL_PADDING = 10;
 
     private static final int DEFAULT_PRESSED_COLOR = Color.parseColor("#bedda8");
     private static final int DEFAULT_DISABLED_COLOR = Color.parseColor("#bbbbbb");
@@ -62,10 +64,14 @@ public class VerifyCodeEditText extends FrameLayout {
     private EditText mEditText;
     private TextView mTextSendVerify;
     private View mViewUnderline;
+    private TextView mTextLabel;
+    private ImageView mImageIcon;
 
     private int mResendTime;
     private int mLastCursorColor = -1;
+    private int mLabelPadding;
     private boolean mIsCountdown;
+    private boolean mUnderlineAlginEditText;
     private int mLeftTime;
     private String mButtonText;
     private String mWaitingText;
@@ -139,6 +145,8 @@ public class VerifyCodeEditText extends FrameLayout {
         mEditText = (EditText) findViewById(R.id.edit_input);
         mTextSendVerify = (TextView) findViewById(R.id.text_send_verifyCode);
         mViewUnderline = findViewById(R.id.view_underline);
+        mTextLabel = (TextView) findViewById(R.id.text_label);
+        mImageIcon = (ImageView) findViewById(R.id.image_icon);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.VerifyCodeEditText);
 
@@ -151,6 +159,10 @@ public class VerifyCodeEditText extends FrameLayout {
         int verifyCodeLength = a.getInt(R.styleable.VerifyCodeEditText_verifyCodeLength, -1);
         int textMarginBottom = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_editMarginBottom, -1);
 
+        String label = a.getString(R.styleable.VerifyCodeEditText_leftLabel);
+        int labelSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_leftLabelSize, -1);
+        mLabelPadding = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_labelPadding, dp2px(DEFAULT_LABEL_PADDING));
+        Drawable icon = a.getDrawable(R.styleable.VerifyCodeEditText_leftIcon);
         ColorStateList buttonTextColor = a.getColorStateList(R.styleable.VerifyCodeEditText_buttonTextColor);
         int buttonTextSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_buttonTextSize, -1);
         Drawable buttonBackground = a.getDrawable(R.styleable.VerifyCodeEditText_buttonBackground);
@@ -160,11 +172,16 @@ public class VerifyCodeEditText extends FrameLayout {
 
         int underLineColor = a.getColor(R.styleable.VerifyCodeEditText_underlineColor, -1);
         int underLineHeight = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_underlineHeight, -1);
+        mUnderlineAlginEditText = a.getBoolean(R.styleable.VerifyCodeEditText_underlineAlignLeftEditText, true);
 
         boolean gravityCenterVertical = a.getBoolean(R.styleable.VerifyCodeEditText_gravityCenterVertical, true);
 
         mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, -1);
         a.recycle();
+
+        setLeftLabel(label);
+        setLeftLabelSize(labelSize);
+        setLeftIcon(icon);
 
         setCursorDrawable(cursorDrawableResId);
         setCursorColor(cursorColor);
@@ -196,6 +213,32 @@ public class VerifyCodeEditText extends FrameLayout {
                 }
             }
         });
+    }
+
+    public void setLeftLabel(String label) {
+        if (TextUtils.isEmpty(label)) {
+            return;
+        }
+        mTextLabel.setVisibility(VISIBLE);
+        mImageIcon.setVisibility(GONE);
+        mTextLabel.setText(label);
+    }
+
+    public void setLeftLabelSize(int size) {
+        if (size != -1) {
+            // TextView 的 setTextSize() 方法接收的是 sp ，所以要将 size 先转换成 sp
+            size = px2sp(size);
+            mTextLabel.setTextSize(size);
+        }
+    }
+
+    public void setLeftIcon(Drawable drawable) {
+        if (drawable == null) {
+            return;
+        }
+        mImageIcon.setVisibility(VISIBLE);
+        mTextLabel.setVisibility(GONE);
+        mImageIcon.setImageDrawable(drawable);
     }
 
     /**
@@ -394,12 +437,32 @@ public class VerifyCodeEditText extends FrameLayout {
         }
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int width = 0;
+        if (mTextLabel.getVisibility() == VISIBLE) {
+            width = mTextLabel.getMeasuredWidth();
+        } else if (mImageIcon.getVisibility() == VISIBLE) {
+            width = mImageIcon.getMeasuredWidth();
+        }
+        if (width != 0) {
+            ((MarginLayoutParams) mEditText.getLayoutParams()).leftMargin = width + mLabelPadding;
+            ((MarginLayoutParams) mViewUnderline.getLayoutParams()).leftMargin = width + mLabelPadding;
+        }
+    }
+
     private int dp2px(int dp) {
         return applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp);
     }
 
     private int sp2px(int sp) {
         return applyDimension(TypedValue.COMPLEX_UNIT_SP, sp);
+    }
+
+    private int px2sp(int px) {
+        final float scaledDensity = getResources().getDisplayMetrics().scaledDensity;
+        return (int) (px / scaledDensity);
     }
 
     private int applyDimension(int unit, int value) {
