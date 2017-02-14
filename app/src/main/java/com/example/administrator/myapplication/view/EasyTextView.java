@@ -11,6 +11,8 @@ import android.graphics.drawable.StateListDrawable;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.Gravity;
 import android.widget.TextView;
 
 import com.example.administrator.myapplication.R;
@@ -25,6 +27,10 @@ public class EasyTextView extends TextView {
 
     private static final boolean AFTER_LOLLIPOP;
     private static final int[][] STATES;
+    private static final int DEFAULT_DISABLED_COLOR = 0xFFBBBBBB;
+    private static final int INVALID_COLOR = -2;
+
+    private boolean mIgnoreTextColor;
 
     static {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
@@ -47,75 +53,92 @@ public class EasyTextView extends TextView {
     @SuppressWarnings("deprecation")
     public EasyTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setGravity(Gravity.CENTER);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.EasyTextView);
 
-        int textPressedColor = a.getColor(R.styleable.EasyTextView_textPressedColor, -1);
-        int textDisabledColor = a.getColor(R.styleable.EasyTextView_textDisabledColor, -1);
-        int textNormalColor = a.getColor(R.styleable.EasyTextView_textNormalColor, -1);
+        ColorStateList textPressedColor = a.getColorStateList(R.styleable.EasyTextView_textPressedColor);
+        ColorStateList textDisabledColor = a.getColorStateList(R.styleable.EasyTextView_textDisabledColor);
+        ColorStateList textNormalColor = a.getColorStateList(R.styleable.EasyTextView_textNormalColor);
+        int textPressedColorInt = getColor(textPressedColor);
+        int textDisabledColorInt = getColor(textDisabledColor);
+        int textNormalColorInt = getColor(textNormalColor);
 
-        int backgroundPressedColor = a.getColor(R.styleable.EasyTextView_backgroundPressedColor, -1);
-        int backgroundDisabledColor = a.getColor(R.styleable.EasyTextView_backgroundDisabledColor, -1);
-        int backgroundNormalColor = a.getColor(R.styleable.EasyTextView_backgroundNormalColor, -1);
+        ColorStateList backgroundPressedColor = a.getColorStateList(R.styleable.EasyTextView_backgroundPressedColor);
+        ColorStateList backgroundDisabledColor = a.getColorStateList(R.styleable.EasyTextView_backgroundDisabledColor);
+        ColorStateList backgroundNormalColor = a.getColorStateList(R.styleable.EasyTextView_backgroundNormalColor);
+        int backgroundPressedColorInt = getColor(backgroundPressedColor);
+        int backgroundDisabledColorInt = getColor(backgroundDisabledColor);
+        int backgroundNormalColorInt = getColor(backgroundNormalColor);
 
         int backgroundRadius = a.getDimensionPixelSize(R.styleable.EasyTextView_backgroundRadius, -1);
         int backgroundStrokeWidth = a.getDimensionPixelSize(R.styleable.EasyTextView_backgroundStrokeWidth, -1);
 
-        if (textPressedColor != -1 && textNormalColor != -1) {
-            // 如果没有定义 disabled 时按钮的颜色，则
-            if (textDisabledColor == -1) {
-                textDisabledColor = lighterColor(textNormalColor);
-            }
-            final ColorStateList csl = createColorStateList(textPressedColor, textDisabledColor, textNormalColor);
-            setTextColor(csl);
+        if (backgroundPressedColorInt != INVALID_COLOR && backgroundNormalColorInt != INVALID_COLOR) {
+            mIgnoreTextColor = true;
             setClickable(true);
-        }
 
-        if (backgroundPressedColor != -1 && backgroundNormalColor != -1) {
-            setClickable(true);
-            if (backgroundDisabledColor == -1) {
-                backgroundDisabledColor = lighterColor(backgroundNormalColor);
+            if (backgroundDisabledColorInt == INVALID_COLOR) {
+                backgroundDisabledColorInt = DEFAULT_DISABLED_COLOR;
             }
-            // 如果没有设置圆角或者 stroke ，则使用 ColorDrawable 作为背景
-            if (backgroundRadius == -1 && backgroundStrokeWidth == -1) {
+
+            final ColorStateList colorStateList = createColorStateList
+                    (backgroundPressedColorInt, backgroundDisabledColorInt, backgroundNormalColorInt);
+            final Drawable drawable;
+
+            // 如果没有设置 radius 和 stroke ，则使用 ColorDrawable 作为背景
+            if (backgroundRadius <= 0 && backgroundStrokeWidth <= 0) {
                 setTextColor(Color.WHITE);
-                final Drawable drawable;
+
                 // 5.0 之后就可以使用 ColorDrawable 来实现带状态的颜色，5.0 之前只能通过 StateListDrawable
                 if (AFTER_LOLLIPOP) {
-                    FixedColorDrawable colorDrawable = new FixedColorDrawable(backgroundNormalColor);
+                    FixedColorDrawable colorDrawable = new FixedColorDrawable(backgroundNormalColorInt);
                     colorDrawable.setTintList(createColorStateList(
-                            backgroundPressedColor, backgroundDisabledColor, backgroundNormalColor));
-                    setBackgroundDrawable(colorDrawable);
+                            backgroundPressedColorInt, backgroundDisabledColorInt, backgroundNormalColorInt));
                     drawable = colorDrawable;
                 } else {
-                    drawable = createStateListDrawable(STATES,
-                            new ColorDrawable(backgroundPressedColor),
-                            new ColorDrawable(backgroundDisabledColor),
-                            new ColorDrawable(backgroundNormalColor));
+                    drawable = createSelector(STATES,
+                            new ColorDrawable(backgroundPressedColorInt),
+                            new ColorDrawable(backgroundDisabledColorInt),
+                            new ColorDrawable(backgroundNormalColorInt));
                 }
-                setBackgroundDrawable(drawable);
             } else {
-                final ColorStateList colorStateList = createColorStateList
-                        (backgroundPressedColor, backgroundDisabledColor, backgroundNormalColor);
-                setTextColor(colorStateList);
-                final Drawable drawable;
+                if (backgroundRadius > 0 && backgroundStrokeWidth <= 0) {
+                    setTextColor(Color.WHITE);
+                } else {
+                    setTextColor(colorStateList);
+                }
+
                 // 5.0 之后 GradientDrawable 可以实现带状态的颜色
                 if (AFTER_LOLLIPOP) {
-                    GradientDrawable gradientDrawable = createGradientDrawable
+                    GradientDrawable gradientDrawable = createShape
                             (backgroundStrokeWidth, backgroundRadius, colorStateList, false);
                     drawable = gradientDrawable;
                 } else {
-                    drawable = createStateListDrawable(STATES,
-                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundPressedColor), true),
-                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundDisabledColor), true),
-                            createGradientDrawable(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundNormalColor), true));
+                    drawable = createSelector(STATES,
+                            createShape(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundPressedColorInt), true),
+                            createShape(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundDisabledColorInt), true),
+                            createShape(backgroundStrokeWidth, backgroundRadius, ColorStateList.valueOf(backgroundNormalColorInt), true));
                 }
-                setBackgroundDrawable(drawable);
             }
-
+            setBackgroundDrawable(drawable);
         }
 
+        if (textPressedColorInt != INVALID_COLOR && textNormalColorInt != INVALID_COLOR && ! mIgnoreTextColor) {
+            // 如果没有定义 disabled 时按钮的颜色，则
+            if (textDisabledColorInt == INVALID_COLOR) {
+                textDisabledColorInt = DEFAULT_DISABLED_COLOR;
+            }
+            final ColorStateList csl = createColorStateList(textPressedColorInt, textDisabledColorInt, textNormalColorInt);
+            setTextColor(csl);
+            setClickable(true);
+        }
         a.recycle();
+    }
+
+    private int getColor(ColorStateList colorStateList) {
+        // -2 表示没有设置该颜色，不能用 -1 来表示，因为 -1 为白色（Color.WHITH）
+        return colorStateList == null ? -2 : colorStateList.getDefaultColor();
     }
 
     private ColorStateList createColorStateList(int... colors) {
@@ -125,30 +148,29 @@ public class EasyTextView extends TextView {
         return new ColorStateList(STATES, colors);
     }
 
-    private GradientDrawable createGradientDrawable(int width, int radius, ColorStateList color, boolean singleColor) {
+    private GradientDrawable createShape(int strokeWidth, int radius, ColorStateList color, boolean singleColor) {
         GradientDrawable gradientDrawable = new GradientDrawable();
-        if (width != -1) {
+        if (strokeWidth > 0) {
             if (singleColor) {
-                gradientDrawable.setStroke(width, color.getDefaultColor());
+                gradientDrawable.setStroke(strokeWidth, color.getDefaultColor());
             } else {
-                gradientDrawable.setStroke(width, color);
+                gradientDrawable.setStroke(strokeWidth, color);
             }
         }
-        if (radius != -1) {
+        if (radius > 0) {
             gradientDrawable.setCornerRadius(radius);
+            if (strokeWidth <= 0) {
+                gradientDrawable.setColor(color);
+            }
         }
         return gradientDrawable;
     }
 
-    private StateListDrawable createStateListDrawable(int[][] states, Drawable... drawables) {
+    private StateListDrawable createSelector(int[][] states, Drawable... drawables) {
         StateListDrawable stateListDrawable = new StateListDrawable();
         stateListDrawable.addState(states[0], drawables[0]);
         stateListDrawable.addState(states[1], drawables[1]);
         stateListDrawable.addState(states[2], drawables[2]);
         return stateListDrawable;
-    }
-
-    private int lighterColor(int color) {
-        return ColorStateList.valueOf(color).withAlpha(0xf0).getDefaultColor();
     }
 }

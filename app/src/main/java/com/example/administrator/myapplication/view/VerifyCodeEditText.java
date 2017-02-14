@@ -6,7 +6,7 @@ import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
+import android.os.CountDownTimer;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
@@ -70,9 +70,7 @@ public class VerifyCodeEditText extends FrameLayout {
     private int mResendTime;
     private int mLastCursorColor = -1;
     private int mLabelPadding;
-    private boolean mIsCountdown;
     private boolean mUnderlineAlginEditText;
-    private int mLeftTime;
     private String mButtonText;
     private String mWaitingText;
 
@@ -92,40 +90,35 @@ public class VerifyCodeEditText extends FrameLayout {
         DEFAULT_BUTTON_COLOR = new ColorStateList(states, colors);
     }
 
-    private Handler mHandler = new Handler();
+    private class ResendCountDownTimer extends CountDownTimer {
 
-    private Runnable updateButtonTextTask = new Runnable() {
-        @Override
-        public void run() {
-            updateButtonTextWhenCountdown();
+        public ResendCountDownTimer(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
         }
-    };
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+            mTextSendVerify.setText(String.format(mWaitingText, millisUntilFinished / 1000));
+        }
+
+        @Override
+        public void onFinish() {
+            setButtonEnabled(true);
+            mTextSendVerify.setText(mButtonText);
+        }
+    }
+
+    private ResendCountDownTimer mResendCountDownTimer;
 
     public void startCountdown() {
-        mIsCountdown = true;
+        mResendCountDownTimer.start();
         setButtonEnabled(false);
-        updateButtonTextWhenCountdown();
     }
 
     public void cancelCountdown() {
-        if (! mIsCountdown) {
-            return;
-        }
-        mIsCountdown = false;
-        mHandler.removeCallbacks(updateButtonTextTask);
         setButtonEnabled(true);
-        mLeftTime = mResendTime;
         mTextSendVerify.setText(mButtonText);
-    }
-
-    private void updateButtonTextWhenCountdown() {
-        mLeftTime --;
-        if (mLeftTime <= 0) {
-            cancelCountdown();
-            return;
-        }
-        mTextSendVerify.setText(String.format(mWaitingText, mLeftTime));
-        mHandler.postDelayed(updateButtonTextTask, 1000);
+        mResendCountDownTimer.cancel();
     }
 
     public interface OnVerifyButtonClickListener {
@@ -157,7 +150,7 @@ public class VerifyCodeEditText extends FrameLayout {
         int textSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_textSize, -1);
         int textColor = a.getColor(R.styleable.VerifyCodeEditText_textColor, -1);
         int verifyCodeLength = a.getInt(R.styleable.VerifyCodeEditText_verifyCodeLength, -1);
-        int textMarginBottom = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_editMarginBottom, -1);
+        int textMarginBottom = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_editTextMarginBottom, -1);
 
         String label = a.getString(R.styleable.VerifyCodeEditText_leftLabel);
         int labelSize = a.getDimensionPixelSize(R.styleable.VerifyCodeEditText_leftLabelSize, -1);
@@ -176,7 +169,7 @@ public class VerifyCodeEditText extends FrameLayout {
 
         boolean gravityCenterVertical = a.getBoolean(R.styleable.VerifyCodeEditText_gravityCenterVertical, true);
 
-        mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, -1);
+        mResendTime = a.getInt(R.styleable.VerifyCodeEditText_resendTime, DEFAULT_RESEND_TIME);
         a.recycle();
 
         setLeftLabel(label);
@@ -310,7 +303,7 @@ public class VerifyCodeEditText extends FrameLayout {
             time = DEFAULT_RESEND_TIME;
         }
         mResendTime = time;
-        mLeftTime = time;
+        mResendCountDownTimer = new ResendCountDownTimer(time * 1000, 1000);
     }
 
     public void setButtonBottomMargin(int margin) {
@@ -456,10 +449,6 @@ public class VerifyCodeEditText extends FrameLayout {
         return applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp);
     }
 
-    private int sp2px(int sp) {
-        return applyDimension(TypedValue.COMPLEX_UNIT_SP, sp);
-    }
-
     private int px2sp(int px) {
         final float scaledDensity = getResources().getDisplayMetrics().scaledDensity;
         return (int) (px / scaledDensity);
@@ -472,10 +461,5 @@ public class VerifyCodeEditText extends FrameLayout {
     private void setTint(Drawable drawable, int color) {
         drawable = DrawableCompat.wrap(drawable);
         DrawableCompat.setTint(drawable, color);
-    }
-
-    private void setTintList(Drawable drawable, ColorStateList color) {
-        drawable = DrawableCompat.wrap(drawable);
-        DrawableCompat.setTintList(drawable, color);
     }
 }
