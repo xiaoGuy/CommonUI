@@ -39,7 +39,7 @@ public class KeyboardDetector {
         bind(activity, container, listener);
     }
 
-    public static void bind(@NonNull Activity activity, @NonNull ViewGroup container, final OnKeyboardStateChangedListener listener) {
+    public static void bind(@NonNull Activity activity, @NonNull final ViewGroup container, final OnKeyboardStateChangedListener listener) {
         if (mScreenHeight == 0) {
             mScreenHeight = activity.getResources().getDisplayMetrics().heightPixels;
         }
@@ -64,17 +64,20 @@ public class KeyboardDetector {
             AndroidBug5497Workaround.assistActivity(activity);
         }
 
+        checkContainer(container);
         if (listener != null) {
             container.addOnLayoutChangeListener(new OnLayoutChangeListener() {
                 @Override
                 public void onLayoutChange(View v, int left, int top, int right, int bottom,
                                            int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                    if (oldBottom != 0 && bottom != 0 && (oldBottom - bottom > mScreenHeight / 3)) {
-                        // 软键盘弹出
-                        listener.onKeyboardShow();
-                    } else if (oldBottom != 0 && bottom != 0 && (bottom - oldBottom > mScreenHeight / 3)) {
-                        // 软键盘隐藏
-                        listener.onKeyboardHide();
+                    if (oldBottom != 0 && bottom != 0) {
+                        if (oldBottom - bottom > mScreenHeight / 3) {
+                            // 软键盘弹出
+                            listener.onKeyboardShow();
+                        }
+                        if (bottom - oldBottom > mScreenHeight / 3) {
+                            listener.onKeyboardHide();
+                        }
                     }
                 }
             });
@@ -82,7 +85,13 @@ public class KeyboardDetector {
     }
 
     public static boolean isAdjustResizeMode(int softInputMode) {
-        return softInputMode == LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
+        if ((softInputMode & LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                == LayoutParams.SOFT_INPUT_ADJUST_RESIZE &&
+                (softInputMode & LayoutParams.SOFT_INPUT_ADJUST_PAN)
+                        != LayoutParams.SOFT_INPUT_ADJUST_PAN) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean isFullScreen(Activity activity) {
@@ -92,6 +101,12 @@ public class KeyboardDetector {
             return true;
         }else {
             return false;
+        }
+    }
+
+    private static void checkContainer(ViewGroup viewGroup) {
+        if (viewGroup.getLayoutParams().height != ViewGroup.LayoutParams.MATCH_PARENT) {
+            Log.e(TAG, "If softInput was shown but listener didn't call, try to set container's height to MATCH_PARENT");
         }
     }
 }
