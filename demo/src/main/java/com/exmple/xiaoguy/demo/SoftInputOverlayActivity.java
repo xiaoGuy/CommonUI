@@ -3,7 +3,7 @@ package com.exmple.xiaoguy.demo;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.xiaoguy.commonui.util.KeyboardDetector;
@@ -22,13 +22,12 @@ public class SoftInputOverlayActivity extends SupportActivity {
         KeyboardDetector.bind(this, layout, new OnKeyboardStateChangedListener() {
             @Override
             public void onKeyboardShow() {
-                Log.d("size", "onKeyboardShow");
+                findViewById(R.id.image).setVisibility(View.GONE);
             }
 
             @Override
             public void onKeyboardHide() {
-                Log.d("size", "onKeyboardHide");
-
+                findViewById(R.id.image).setVisibility(View.VISIBLE);
             }
         });
 

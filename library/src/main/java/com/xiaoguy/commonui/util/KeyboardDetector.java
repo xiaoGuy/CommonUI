@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -23,15 +24,7 @@ public class KeyboardDetector {
     private static final String TAG = KeyboardDetector.class.getSimpleName();
     private static int mScreenHeight;
 
-    public interface OnKeyboardStateChangedListener {
-        void onKeyboardShow();
-        void onKeyboardHide();
-    }
-
-    private KeyboardDetector() {
-    }
-
-    public static void bind(@NonNull Fragment fragment, @NonNull ViewGroup container, OnKeyboardStateChangedListener listener) {
+    public static void bind(@NonNull Fragment fragment, @NonNull ViewGroup container, @NonNull OnKeyboardStateChangedListener listener) {
         Activity activity = fragment.getActivity();
         if (activity == null) {
             throw new IllegalStateException("fragment.getActivity() return null");
@@ -39,7 +32,7 @@ public class KeyboardDetector {
         bind(activity, container, listener);
     }
 
-    public static void bind(@NonNull Activity activity, @NonNull final ViewGroup container, final OnKeyboardStateChangedListener listener) {
+    public static void bind(@NonNull Activity activity, @NonNull final ViewGroup container, @NonNull final OnKeyboardStateChangedListener listener) {
         if (mScreenHeight == 0) {
             mScreenHeight = activity.getResources().getDisplayMetrics().heightPixels;
         }
@@ -65,23 +58,32 @@ public class KeyboardDetector {
         }
 
         checkContainer(container);
-        if (listener != null) {
-            container.addOnLayoutChangeListener(new OnLayoutChangeListener() {
-                @Override
-                public void onLayoutChange(View v, int left, int top, int right, int bottom,
-                                           int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                    if (oldBottom != 0 && bottom != 0) {
-                        if (oldBottom - bottom > mScreenHeight / 3) {
-                            // 软键盘弹出
-                            listener.onKeyboardShow();
-                        }
-                        if (bottom - oldBottom > mScreenHeight / 3) {
-                            listener.onKeyboardHide();
-                        }
+        container.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                if (oldBottom != 0 && bottom != 0) {
+                    if (oldBottom - bottom > mScreenHeight / 3) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                // 软键盘弹出
+                                listener.onKeyboardShow();
+                            }
+                        }, 50);
+                    }
+                    if (bottom - oldBottom > mScreenHeight / 3) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                // 软键盘收起
+                                listener.onKeyboardHide();
+                            }
+                        }, 50);
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     public static boolean isAdjustResizeMode(int softInputMode) {
@@ -96,12 +98,22 @@ public class KeyboardDetector {
 
     public static boolean isFullScreen(Activity activity) {
         int flag = activity.getWindow().getAttributes().flags;
-        if((flag & WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        if ((flag & WindowManager.LayoutParams.FLAG_FULLSCREEN)
                 == WindowManager.LayoutParams.FLAG_FULLSCREEN) {
             return true;
-        }else {
+        }
+        else {
             return false;
         }
+    }
+
+    private KeyboardDetector() {
+    }
+
+    public interface OnKeyboardStateChangedListener {
+        void onKeyboardShow();
+
+        void onKeyboardHide();
     }
 
     private static void checkContainer(ViewGroup viewGroup) {
