@@ -154,6 +154,8 @@ public class EasyTextView extends AppCompatTextView {
         if (strokeWidth > 0) {
             if (singleColor) {
                 gradientDrawable.setStroke(strokeWidth, color.getDefaultColor());
+                // 设置透明避免 API 16 时镂空部分为黑色
+                gradientDrawable.setColor(Color.TRANSPARENT);
             } else {
                 gradientDrawable.setStroke(strokeWidth, color);
             }

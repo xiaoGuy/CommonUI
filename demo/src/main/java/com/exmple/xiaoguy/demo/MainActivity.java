@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d("size", "softInputMode: " + Integer.toBinaryString(activityInfo.softInputMode));
     }
 
     public void onClick(View v) {
