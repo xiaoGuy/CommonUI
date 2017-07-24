@@ -4,20 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingLeft="10dp"
     android:paddingRight="10dp"
     tools:context="com.exmple.xiaoguy.demo.MainActivity">
 
-    <com.xiaoguy.commonui.view.EasyTextView
-        android:id="@+id/btn_soft_overlay"
+    <com.xiaoguy.commonui.view.ClearAutoCompleteTextView
+        android:id="@+id/clear_edit"
         android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:text="SoftInput Overlay"
-        app:backgroundNormalColor="@color/colorPrimary"
-        app:backgroundPressedColor="@color/colorAccent"
-        app:backgroundRadius="4dp"
-        app:backgroundStrokeWidth="1dp"
-        android:onClick="onClick"/>
-
+        android:layout_height="wrap_content"/>
 </LinearLayout>
