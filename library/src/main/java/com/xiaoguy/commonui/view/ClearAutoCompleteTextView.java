@@ -45,7 +45,7 @@ public class ClearAutoCompleteTextView extends AppCompatAutoCompleteTextView imp
     }
 
     public ClearAutoCompleteTextView(Context context, AttributeSet attrs) {
-        this(context, attrs, android.R.attr.editTextStyle);
+        this(context, attrs, android.R.attr.autoCompleteTextViewStyle);
     }
 
     public ClearAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
