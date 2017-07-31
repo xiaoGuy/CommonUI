@@ -21,6 +21,5 @@
         android:completionThreshold="1"
         android:layout_centerInParent="true"
         android:dropDownWidth="wrap_content"
-        android:completionHintView="@layout/completion_hint_view"
         android:layout_alignParentBottom="false"/>
 </LinearLayout>
