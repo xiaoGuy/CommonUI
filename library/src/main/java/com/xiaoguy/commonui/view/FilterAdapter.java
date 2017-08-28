@@ -1,4 +1,4 @@
-package com.exmple.xiaoguy.demo;
+package com.xiaoguy.commonui.view;
 
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
