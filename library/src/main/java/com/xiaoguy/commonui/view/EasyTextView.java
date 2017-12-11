@@ -30,8 +30,6 @@ public class EasyTextView extends AppCompatTextView {
     private static final int DEFAULT_DISABLED_COLOR = 0xFFBBBBBB;
     private static final int INVALID_COLOR = -2;
 
-    private boolean mIgnoreTextColor;
-
     static {
         if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
             AFTER_LOLLIPOP = true;
@@ -75,7 +73,6 @@ public class EasyTextView extends AppCompatTextView {
         int backgroundStrokeWidth = a.getDimensionPixelSize(R.styleable.EasyTextView_backgroundStrokeWidth, -1);
 
         if (backgroundPressedColorInt != INVALID_COLOR && backgroundNormalColorInt != INVALID_COLOR) {
-            mIgnoreTextColor = true;
             setClickable(true);
 
             if (backgroundDisabledColorInt == INVALID_COLOR) {
@@ -88,7 +85,7 @@ public class EasyTextView extends AppCompatTextView {
 
             // 如果没有设置 radius 和 stroke ，则使用 ColorDrawable 作为背景
             if (backgroundRadius <= 0 && backgroundStrokeWidth <= 0) {
-                setTextColor(Color.WHITE);
+//                setTextColor(Color.WHITE);
 
                 // 5.0 之后就可以使用 ColorDrawable 来实现带状态的颜色，5.0 之前只能通过 StateListDrawable
                 if (AFTER_LOLLIPOP) {
@@ -104,7 +101,7 @@ public class EasyTextView extends AppCompatTextView {
                 }
             } else {
                 if (backgroundRadius > 0 && backgroundStrokeWidth <= 0) {
-                    setTextColor(Color.WHITE);
+//                    setTextColor(Color.WHITE);
                 } else {
                     setTextColor(colorStateList);
                 }
@@ -124,7 +121,7 @@ public class EasyTextView extends AppCompatTextView {
             setBackgroundDrawable(drawable);
         }
 
-        if (textPressedColorInt != INVALID_COLOR && textNormalColorInt != INVALID_COLOR && ! mIgnoreTextColor) {
+        if (textPressedColorInt != INVALID_COLOR && textNormalColorInt != INVALID_COLOR) {
             // 如果没有定义 disabled 时按钮的颜色，则
             if (textDisabledColorInt == INVALID_COLOR) {
                 textDisabledColorInt = DEFAULT_DISABLED_COLOR;
