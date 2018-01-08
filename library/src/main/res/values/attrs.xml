@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="VerifyCodeEditText">
+    <declare-styleable name="VerifyCodeText">
 
         <attr name="cursorDrawable" format="reference"/>
         <attr name="cursorColor" format="color"/>
-        <attr name="hint" format="string"/>
-        <attr name="hintColor" format="color"/>
-        <attr name="textSize" format="dimension"/>
-        <attr name="textColor" format="color"/>
+        <attr name="verify_hint" format="string"/>
+        <attr name="verify_hintColor" format="color"/>
+        <attr name="verify_textSize" format="dimension"/>
+        <attr name="verify_textColor" format="color"/>
         <!-- 验证码的长度 -->
         <attr name="verifyCodeLength" format="integer"/>
         <!-- 输入框距离底部的间距 -->
