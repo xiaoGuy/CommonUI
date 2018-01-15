@@ -8,13 +8,13 @@
     android:paddingRight="10dp"
     android:orientation="vertical">
 
-    <com.xiaoguy.commonui.view.VerifyCodeText
+    <EditText
         android:id="@+id/edit"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="FUCK"
-        app:backgroundNormalColor="@color/colorPrimary"
-        app:backgroundPressedColor="@color/colorPrimaryDark"
-        app:textNormalColor="@android:color/white"
-        app:textPressedColor="@android:color/holo_red_light"/>
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 </LinearLayout>
