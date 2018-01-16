@@ -37,6 +37,11 @@ public class DecimalNumberFilter implements InputFilter {
     }
     private OnExceedMaxValueListener mOnExceedMaxValueListener;
 
+    public interface OnExceedDecimalCountListener {
+        void onExceedPoint(int decimalCount);
+    }
+    private OnExceedDecimalCountListener mOnExceedDecimalCountListener;
+
     /**
      * @param maxValue 最大值必须大于等于 1
      * @param decimalCount 不能为复数
@@ -68,6 +73,10 @@ public class DecimalNumberFilter implements InputFilter {
         mOnExceedMaxValueListener = onExceedMaxValueListener;
     }
 
+    public void setOnExceedDecimalCountListener(OnExceedDecimalCountListener onExceedDecimalCountListener) {
+        mOnExceedDecimalCountListener = onExceedDecimalCountListener;
+    }
+
     /**
      * @param source 本次输入的内容
      * @param start 输入内容的起始位置
@@ -95,11 +104,14 @@ public class DecimalNumberFilter implements InputFilter {
             return "";
         }
 
-        // TODO: 2018/1/16 强制到这一步的时候 length == 1
         if (length != 0) {
             // 过滤掉非数字跟点
             CharSequence filteredCs = mDigitsKeyListener.filter(source, start, end, dest, dstart, dend);
             if (filteredCs != null && filteredCs.length() == 0) {
+                // 避免在选中状态下输入了不允许的字符时将选中的内容删除
+                if (dend - dstart > 0) {
+                    return dest.subSequence(dstart, dend);
+                }
                 return "";
             }
         }
@@ -143,6 +155,9 @@ public class DecimalNumberFilter implements InputFilter {
                     }
                     // 如果替换后小数的位数大于允许的位数，则不允许替换
                     if (dest.length() - dstart - 1 > mDecimalCount) {
+                        if (mOnExceedDecimalCountListener != null) {
+                            mOnExceedDecimalCountListener.onExceedPoint(mDecimalCount);
+                        }
                         return cs;
                     }
                 } else {
@@ -152,7 +167,7 @@ public class DecimalNumberFilter implements InputFilter {
                         if (dstart == 1 && dest.charAt(0) == O) {
                             return cs;
                         }
-                        // 如果替换的是 . 并且替换后的值大于最大值则不允许替换
+                        // 如果替换后的值大于最大值则不允许替换
                         StringBuilder sb = new StringBuilder(dest);
                         sb.replace(dstart, dend, String.valueOf(source.charAt(0)));
                         if (Integer.parseInt(sb.toString()) > mMaxValue) {
@@ -161,6 +176,12 @@ public class DecimalNumberFilter implements InputFilter {
                             }
                             return cs;
                         }
+                    }
+                    final char replacement = source.charAt(0);
+                    // 当第二位字符不是 . 时，第一位字符不能被替换成 0
+                    if (replacement == O && dstart == 0 &&
+                            dest.length() >= 2 && dest.charAt(1) != DOT) {
+                        return cs;
                     }
                 }
             }
@@ -176,6 +197,9 @@ public class DecimalNumberFilter implements InputFilter {
                     }
                     // 不允许插入 . 后，小数的位数大于允许的位数
                     if (dest.length() - dstart > mDecimalCount) {
+                        if (mOnExceedDecimalCountListener != null) {
+                            mOnExceedDecimalCountListener.onExceedPoint(mDecimalCount);
+                        }
                         return "";
                     }
                     // 当前输入框中的值已经达到最大值后，不能在末尾输入 .
@@ -216,6 +240,9 @@ public class DecimalNumberFilter implements InputFilter {
                     if (indexOfDot != -1) {
                         int lengthBehindDot = dest.length() - indexOfDot - 1;
                         if (lengthBehindDot >= mDecimalCount) {
+                            if (mOnExceedDecimalCountListener != null) {
+                                mOnExceedDecimalCountListener.onExceedPoint(mDecimalCount);
+                            }
                             return "";
                         }
                     }

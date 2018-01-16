@@ -5,8 +5,7 @@
 4. . 不能是第一位，即不能存在 .xxx 的情况
 5. 若 0 是第一位则后面只能跟 .。即 0.xx 的情况
 6. 不允许小数的位数大于允许的位数
-* 7. 不允许所有小数输完后数值为 0 的情况。比如最多允许 2 位小数，则不能输入 0.00
-8. 不允许输入超过最大值
+7. 不允许输入超过最大值
 
 // 删除操作
 if (source.length == 0) {
@@ -43,3 +42,14 @@ else {
     	}
     }
 }
+
+// 删除/剪切
+source.length == 0
+dend - dstart >  0
+
+source.length > 0
+    dend - dstart == 0 
+        dstart == dest.length // 追加
+        dstart <  dest.length // 插入
+    dend - dstart >  0 // 替换
+

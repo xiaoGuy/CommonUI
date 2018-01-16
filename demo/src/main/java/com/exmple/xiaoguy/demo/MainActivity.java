@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.xiaoguy.commonui.text.DecimalNumberFilter;
+import com.xiaoguy.commonui.text.DecimalNumberFilter.OnExceedDecimalCountListener;
 import com.xiaoguy.commonui.text.DecimalNumberFilter.OnExceedMaxValueListener;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,11 +20,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DecimalNumberFilter filter = new DecimalNumberFilter(200, 1);
+        DecimalNumberFilter filter = new DecimalNumberFilter(20000, 1);
         filter.setOnExceedMaxValueListener(new OnExceedMaxValueListener() {
             @Override
             public void onExceedMaxValue(int maxValue) {
                 Toast.makeText(MainActivity.this, "Max value is " + maxValue, Toast.LENGTH_SHORT).show();
+            }
+        });
+        filter.setOnExceedDecimalCountListener(new OnExceedDecimalCountListener() {
+            @Override
+            public void onExceedPoint(int decimalCount) {
+                Toast.makeText(MainActivity.this, "Max decimal count is " + decimalCount, Toast.LENGTH_SHORT).show();
             }
         });
 
