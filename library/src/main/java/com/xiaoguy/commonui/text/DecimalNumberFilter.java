@@ -95,6 +95,7 @@ public class DecimalNumberFilter implements InputFilter {
             return "";
         }
 
+        // TODO: 2018/1/16 强制到这一步的时候 length == 1
         if (length != 0) {
             // 过滤掉非数字跟点
             CharSequence filteredCs = mDigitsKeyListener.filter(source, start, end, dest, dstart, dend);
